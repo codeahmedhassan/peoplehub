@@ -12,15 +12,314 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- PeopleHub custom utilities ---------- */
+
+/* Subtle background mesh and ribbon glow effect */
+.hero-bg-gradient {
+  background:
+    radial-gradient(
+      circle at 85% 15%,
+      rgba(219, 234, 254, 0.8) 0%,
+      rgba(239, 246, 255, 0.5) 45%,
+      rgba(255, 255, 255, 0) 70%
+    ),
+    radial-gradient(
+      circle at 10% 20%,
+      rgba(238, 242, 255, 0.7) 0%,
+      rgba(255, 255, 255, 0) 50%
+    );
 }
+
+/* Soft perspective angle for hero dashboard showcase */
+.dashboard-perspective {
+  transform: rotate(-1deg) perspective(1200px) rotateY(-1deg);
+  transition: transform 0.4s ease;
+}
+.dashboard-perspective:hover {
+  transform: rotate(0deg) perspective(1200px);
+}
+
+/* Handwriting font utility */
+.font-handwriting {
+  font-family: var(--font-caveat), cursive;
+}
+
+/* Dashboard soft shadow */
+.shadow-dashboard {
+  box-shadow:
+    0 25px 60px -15px rgba(14, 30, 70, 0.12),
+    0 0 1px 1px rgba(14, 30, 70, 0.05);
+}
+
+.shadow-card-soft {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* ---------- Force light theme ---------- */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-jakarta), Arial, Helvetica, sans-serif;
+}
+
+html {
+  background: #ffffff;
+  color-scheme: light;
+}
+
+/* ---------- Auth page animations ---------- */
+
+@keyframes auth-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes auth-blob-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -20px) scale(1.06);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.96);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes auth-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-auth-rise {
+  animation: auth-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-auth-float {
+  animation: auth-float 7s ease-in-out infinite;
+}
+
+.animate-auth-blob {
+  animation: auth-blob-drift 22s ease-in-out infinite;
+}
+
+.animate-auth-shimmer {
+  background-size: 200% 100%;
+  animation: auth-shimmer 3s linear infinite;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-auth-rise,
+  .animate-auth-float,
+  .animate-auth-blob,
+  .animate-auth-shimmer {
+    animation: none;
+  }
+}
+
+/* ---------- Cookie consent banner ---------- */
+
+@keyframes cookie-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cookie-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-cookie-rise {
+  animation: cookie-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-cookie-fade {
+  animation: cookie-fade-in 0.35s ease-out both;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-cookie-rise,
+  .animate-cookie-fade {
+    animation: none;
+  }
+}
+
+@keyframes cookie-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-cookie-fade {
+  animation: cookie-fade-in 0.35s ease-out both;
+}
+
+/* ---------- OTP / 2FA animations ---------- */
+
+@keyframes otp-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes otp-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes otp-success-flash {
+  0% {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.4);
+  }
+  100% {
+    background-color: transparent;
+    border-color: rgba(226, 232, 240, 1);
+  }
+}
+
+.animate-otp-pop {
+  animation: otp-pop 0.25s ease-out;
+}
+
+.animate-otp-shake {
+  animation: otp-shake 0.4s ease-in-out;
+}
+
+.animate-otp-success {
+  animation: otp-success-flash 0.8s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-otp-pop,
+  .animate-otp-shake,
+  .animate-otp-success {
+    animation: none;
+  }
+}
+
+/* ---------- 404 page 3D animations ---------- */
+
+@keyframes notfound-float {
+  0%,
+  100% {
+    transform: translateY(0) rotateZ(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotateZ(-1.5deg);
+  }
+}
+
+@keyframes notfound-shadow-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: scale(0.85);
+    opacity: 0.2;
+  }
+}
+
+@keyframes notfound-shimmer {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+
+.animate-notfound-float {
+  animation: notfound-float 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.animate-notfound-shadow {
+  animation: notfound-shadow-pulse 6s ease-in-out infinite;
+}
+
+.animate-notfound-shimmer {
+  background-size: 200% 100%;
+  animation: notfound-shimmer 4s linear infinite;
+}
+
+/* 3D scene container — enables perspective for children */
+.scene-3d {
+  perspective: 1200px;
+  perspective-origin: 50% 40%;
+}
+
+/* Each digit is a layer in 3D space */
+.digit-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-notfound-float,
+  .animate-notfound-shadow,
+  .animate-notfound-shimmer {
+    animation: none;
+  }
+  .digit-3d {
+    transition: none;
+  }
 }
