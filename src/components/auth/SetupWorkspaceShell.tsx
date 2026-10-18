@@ -6,10 +6,10 @@ import Link from "next/link";
 import SetupProgress from "./SetupProgress";
 import StepCompany, { type CompanyData } from "./StepCompany";
 import StepTeamSize from "./StepTeamSize";
-import StepInviteTeam, { type Invite } from "./StepInviteTeam";
 import StepTheme, { type ThemeData } from "./StepTheme";
 import SetupComplete from "./SetupComplete";
-import { SETUP_TOTAL_STEPS } from "@/lib/constants";
+import { SETUP_TOTAL_STEPS, workspaceApi } from "@/lib/constants";
+import { ApiError } from "@/lib/api";
 
 type FinishState = "form" | "submitting" | "complete";
 
@@ -54,6 +54,7 @@ const INITIAL_MODULES: Record<string, boolean> = {
 export default function SetupWorkspaceShell() {
     const [step, setStep] = useState(0);
     const [finishState, setFinishState] = useState<FinishState>("form");
+    const [error, setError] = useState<string | null>(null);
 
     // Form state
     const [company, setCompany] = useState<CompanyData>({
@@ -62,7 +63,6 @@ export default function SetupWorkspaceShell() {
         timezone: "",
     });
     const [teamSize, setTeamSize] = useState("");
-    const [invites, setInvites] = useState<Invite[]>([]);
     const [theme, setTheme] = useState<ThemeData>({
         accent: "blue",
         modules: INITIAL_MODULES,
@@ -73,12 +73,7 @@ export default function SetupWorkspaceShell() {
         if (step === 0)
             return company.name.trim().length > 0 && company.industry && company.timezone;
         if (step === 1) return teamSize !== "";
-        if (step === 2) {
-            // Any non-empty invite must have a valid email format
-            const filled = invites.filter((inv) => inv.email.trim().length > 0);
-            return filled.every((inv) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inv.email));
-        }
-        return true; // step 3 always allows finish
+        return true; // step 2 (theme) always allows finish
     })();
 
     function next() {
@@ -100,17 +95,35 @@ export default function SetupWorkspaceShell() {
     }
 
     async function finish() {
+        setError(null);
         setFinishState("submitting");
-        // Simulated submission — replace with your real API call.
-        const payload = {
-            company,
-            teamSize,
-            invites: invites.filter((inv) => inv.email.trim().length > 0),
-            theme,
-        };
-        console.log("Setup submission:", payload);
-        await new Promise((res) => setTimeout(res, 900));
-        setFinishState("complete");
+        try {
+            await workspaceApi.setup({
+                company: {
+                    name: company.name.trim(),
+                    industry: company.industry,
+                    timezone: company.timezone,
+                },
+                teamSize,
+                theme: {
+                    accent: theme.accent,
+                    modules: {
+                        employees: Boolean(theme.modules.employees),
+                        attendance: Boolean(theme.modules.attendance),
+                        payroll: Boolean(theme.modules.payroll),
+                        recruitment: Boolean(theme.modules.recruitment),
+                    },
+                },
+            });
+            setFinishState("complete");
+        } catch (err) {
+            setFinishState("form");
+            setError(
+                err instanceof ApiError
+                    ? err.message
+                    : "Something went wrong. Please try again."
+            );
+        }
     }
 
     return (
@@ -171,11 +184,7 @@ export default function SetupWorkspaceShell() {
                 </div>
 
                 {finishState === "complete" ? (
-                    <SetupComplete
-                        company={company}
-                        teamSize={teamSize}
-                        inviteCount={invites.filter((i) => i.email.trim()).length}
-                    />
+                    <SetupComplete company={company} teamSize={teamSize} />
                 ) : (
                     <>
                         {/* Progress */}
@@ -185,9 +194,14 @@ export default function SetupWorkspaceShell() {
                         <div key={step} className="animate-cookie-fade">
                             {step === 0 && <StepCompany value={company} onChange={setCompany} />}
                             {step === 1 && <StepTeamSize value={teamSize} onChange={setTeamSize} />}
-                            {step === 2 && <StepInviteTeam invites={invites} onChange={setInvites} />}
-                            {step === 3 && <StepTheme value={theme} onChange={setTheme} />}
+                            {step === 2 && <StepTheme value={theme} onChange={setTheme} />}
                         </div>
+
+                        {error && (
+                            <p className="mt-4 text-sm text-rose-600 text-center" role="alert">
+                                {error}
+                            </p>
+                        )}
 
                         {/* Navigation */}
                         <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center gap-2.5 sm:gap-3">
@@ -212,7 +226,7 @@ export default function SetupWorkspaceShell() {
 
                             <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
                                 {/* Skip — visible on invite + theme steps, or when they can't proceed but want to move on */}
-                                {(step === 2 || step === 3) && (
+                                {step === 2 && (
                                     <button
                                         type="button"
                                         onClick={skip}

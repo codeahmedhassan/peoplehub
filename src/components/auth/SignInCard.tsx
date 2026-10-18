@@ -1,9 +1,9 @@
+// Sign-In Card
 "use client";
 
 import Link from "next/link";
 import Image from "next/image";
 import SignInForm from "./SignInForm";
-import SocialSignIn from "./SocialSignIn";
 
 export default function SignInCard() {
     return (
@@ -74,11 +74,6 @@ export default function SignInCard() {
                     <p className="mt-2 text-sm text-slate-600">
                         Sign in to your workspace to pick up where you left off.
                     </p>
-                </div>
-
-                {/* Social sign-in */}
-                <div className="mb-5">
-                    <SocialSignIn />
                 </div>
 
                 {/* Form */}

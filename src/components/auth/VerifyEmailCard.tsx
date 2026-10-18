@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import ResendTimer from "./ResendTimer";
 import { VERIFY_EMAIL_STEPS } from "@/lib/constants";
+import { apiFetch } from "@/lib/api";
 
 type Props = {
     email: string;
@@ -44,10 +45,10 @@ function StepIndicator() {
                     <div className="flex items-center gap-2 min-w-0">
                         <span
                             className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${step.done
-                                    ? "bg-emerald-500 text-white"
-                                    : step.active
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-slate-200 text-slate-500"
+                                ? "bg-emerald-500 text-white"
+                                : step.active
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-slate-200 text-slate-500"
                                 }`}
                         >
                             {step.done ? (
@@ -60,10 +61,10 @@ function StepIndicator() {
                         </span>
                         <span
                             className={`text-[11px] font-semibold truncate hidden sm:inline ${step.done
-                                    ? "text-emerald-600"
-                                    : step.active
-                                        ? "text-blue-600"
-                                        : "text-slate-400"
+                                ? "text-emerald-600"
+                                : step.active
+                                    ? "text-blue-600"
+                                    : "text-slate-400"
                                 }`}
                         >
                             {step.label}
@@ -94,10 +95,14 @@ export default function VerifyEmailCard({ email }: Props) {
     }, []);
 
     async function handleResend() {
-        // Simulated resend — replace with your real endpoint.
-        console.log("Resending verification email to:", email);
-        await new Promise((res) => setTimeout(res, 800));
-        setResendCount((n) => n + 1);
+        try {
+            await apiFetch("/auth/resend-verification", { method: "POST" });
+            setResendCount((n) => n + 1);
+        } catch {
+            // On failure (session expired), bump the user to signup.
+            // (Optional — or just show an inline error. Your call.)
+            setResendCount((n) => n + 1);
+        }
     }
 
     const showWaitingHint = elapsed >= 60;

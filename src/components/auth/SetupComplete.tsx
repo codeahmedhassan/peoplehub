@@ -14,19 +14,14 @@ function ArrowRight() {
 type Props = {
     company: CompanyData;
     teamSize: string;
-    inviteCount: number;
 };
 
-export default function SetupComplete({ company, teamSize, inviteCount }: Props) {
+export default function SetupComplete({ company, teamSize }: Props) {
     const summary = [
         { label: "Company", value: company.name || "—" },
         { label: "Industry", value: company.industry || "—" },
         { label: "Timezone", value: company.timezone || "—" },
         { label: "Team size", value: teamSize || "—" },
-        {
-            label: "Invites",
-            value: inviteCount > 0 ? `${inviteCount} pending` : "None sent",
-        },
     ];
 
     return (
@@ -86,7 +81,7 @@ export default function SetupComplete({ company, teamSize, inviteCount }: Props)
             {/* Actions */}
             <div className="mt-7 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2.5">
                 <Link
-                    href="/"
+                    href={`${process.env.NEXT_PUBLIC_ADMIN_URL}`}
                     className="
             relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full overflow-hidden
             text-white text-sm font-semibold

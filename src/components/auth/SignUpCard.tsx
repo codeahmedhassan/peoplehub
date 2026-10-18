@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import SignUpForm from "./SignUpForm";
-import SocialSignIn from "./SocialSignIn";
 import { SIGNUP_STEPS } from "@/lib/constants";
 
 function StepIndicator() {
@@ -105,11 +104,6 @@ export default function SignUpCard() {
                     <p className="mt-2 text-sm text-slate-600">
                         Free for 14 days. No credit card. Cancel anytime.
                     </p>
-                </div>
-
-                {/* Social sign-up */}
-                <div className="mb-5">
-                    <SocialSignIn />
                 </div>
 
                 {/* Form */}

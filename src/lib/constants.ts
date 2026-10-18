@@ -2,6 +2,8 @@
    HOME PAGE DATA
    ============================================================ */
 
+import { apiFetch } from "./api";
+
 /* ---------- Navbar links ---------- */
 export const NAV_LINKS = [
     { label: "Features", dropdown: false, href: "/features" },
@@ -2601,21 +2603,24 @@ export const SIGNUP_BENEFITS = [
 ] as const;
 
 export const SIGNUP_COMPANY_SIZES = [
-    "1–10 employees",
-    "11–50 employees",
-    "51–200 employees",
-    "201–1,000 employees",
-    "1,000+ employees",
+    "1-10",
+    "11-50",
+    "51-200",
+    "201-500",
+    "501-1000",
+    "1000+",
 ] as const;
 
 export const SIGNUP_ROLES = [
     "Founder / CEO",
-    "HR lead",
-    "People operations",
+    "HR Manager",
+    "HR Executive",
+    "People Ops",
+    "Operations Manager",
     "Finance",
-    "IT / Admin",
     "Other",
 ] as const;
+
 
 export const SIGNUP_TESTIMONIAL = {
     quote:
@@ -3276,12 +3281,11 @@ export const VERIFY_EMAIL_STEPS: VerifyEmailStep[] = [
    SETUP WORKSPACE PAGE DATA
    ============================================================ */
 
-export const SETUP_TOTAL_STEPS = 4;
+export const SETUP_TOTAL_STEPS = 3;
 
 export const SETUP_STEPS = [
     { id: "company", label: "Company" },
     { id: "size", label: "Team size" },
-    { id: "invite", label: "Invite team" },
     { id: "theme", label: "Finish" },
 ] as const;
 
@@ -3538,3 +3542,49 @@ export const NOT_FOUND_QUICK_LINKS = [
     { label: "About us", href: "/about" },
     { label: "Privacy", href: "/privacy" },
 ] as const;
+
+// -------------------------------------------------------------------
+// Workspace API
+// -------------------------------------------------------------------
+
+export type WorkspacePayload = {
+    company: { name: string; industry: string; timezone: string };
+    teamSize: string;
+    theme: {
+        accent: string;
+        modules: {
+            employees: boolean;
+            attendance: boolean;
+            payroll: boolean;
+            recruitment: boolean;
+        };
+    };
+};
+
+export type WorkspaceResponse = {
+    id: string;
+    companyName: string;
+    industry: string;
+    timezone: string;
+    teamSize: string;
+    theme: {
+        accent: string;
+        modules: Record<string, boolean>;
+    };
+    setupCompletedAt: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export const workspaceApi = {
+    setup: (payload: WorkspacePayload) =>
+        apiFetch<{ workspace: WorkspaceResponse }>("/workspace/setup", {
+            method: "POST",
+            body: payload,
+        }),
+
+    me: () =>
+        apiFetch<{ workspace: WorkspaceResponse | null }>("/workspace/me", {
+            method: "GET",
+        }),
+};

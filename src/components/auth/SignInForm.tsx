@@ -1,7 +1,10 @@
+// Sign-In Form
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { authApi, ApiError } from "@/lib/api";
 
 function MailIcon() {
     return (
@@ -32,12 +35,7 @@ function LockIcon() {
 function EyeIcon({ open }: { open: boolean }) {
     return open ? (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-            />
+            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
             <path
                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                 strokeLinecap="round"
@@ -69,38 +67,89 @@ function Spinner() {
     return (
         <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+            <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+    );
+}
+
+function AlertIcon() {
+    return (
+        <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path
-                d="M22 12a10 10 0 0 1-10 10"
-                stroke="currentColor"
-                strokeWidth="4"
+                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
                 strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
             />
         </svg>
     );
 }
 
 export default function SignInForm() {
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        setFormError(null);
+        if (submitting) return;
+
+        const form = new FormData(e.currentTarget);
+        const email = String(form.get("email") || "").trim().toLowerCase();
+        const password = String(form.get("password") || "");
+        const rememberMe = form.get("remember") === "on";
+
         setSubmitting(true);
-        // Simulated submission — replace with your auth call.
-        const payload = Object.fromEntries(new FormData(e.currentTarget).entries());
-        console.log("Sign-in payload:", payload);
-        await new Promise((res) => setTimeout(res, 900));
-        setSubmitting(false);
+        try {
+            const { user, requiresVerification } = await authApi.login({
+                email,
+                password,
+                rememberMe,
+            });
+
+            const ADMIN_URL =
+                process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3002";
+
+            if (requiresVerification) {
+                router.replace("/verify-email");
+                return;
+            }
+            if (!user.emailVerified) {
+                router.replace("/verify-email");
+                return;
+            }
+            if (!user.setupCompletedAt) {
+                router.replace("/setup-workspace");
+                return;
+            }
+            window.location.href = `${ADMIN_URL}/`;
+        } catch (err) {
+            setSubmitting(false);
+            setFormError(
+                err instanceof ApiError
+                    ? err.message
+                    : "Something went wrong. Please try again."
+            );
+        }
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
+            {formError && (
+                <div
+                    role="alert"
+                    className="flex items-start gap-2 rounded-2xl bg-rose-50/90 border border-rose-200 text-rose-700 text-xs sm:text-sm px-4 py-3"
+                >
+                    <AlertIcon />
+                    <span>{formError}</span>
+                </div>
+            )}
+
             {/* Email */}
             <div>
-                <label
-                    htmlFor="email"
-                    className="block text-xs sm:text-sm font-semibold text-slate-700 mb-2"
-                >
+                <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">
                     Email address
                 </label>
                 <div className="relative">
@@ -114,6 +163,7 @@ export default function SignInForm() {
                         required
                         autoComplete="email"
                         placeholder="you@company.com"
+                        disabled={submitting}
                         className="
               w-full pl-11 pr-4 py-3 rounded-2xl
               bg-white/70 backdrop-blur-md
@@ -121,7 +171,7 @@ export default function SignInForm() {
               ring-1 ring-slate-900/5
               text-sm text-slate-900 placeholder-slate-400
               focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60
-              transition-all
+              transition-all disabled:opacity-60
             "
                     />
                 </div>
@@ -151,6 +201,7 @@ export default function SignInForm() {
                         required
                         autoComplete="current-password"
                         placeholder="Enter your password"
+                        disabled={submitting}
                         className="
               w-full pl-11 pr-12 py-3 rounded-2xl
               bg-white/70 backdrop-blur-md
@@ -158,7 +209,7 @@ export default function SignInForm() {
               ring-1 ring-slate-900/5
               text-sm text-slate-900 placeholder-slate-400
               focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60
-              transition-all
+              transition-all disabled:opacity-60
             "
                     />
                     <button
@@ -177,12 +228,15 @@ export default function SignInForm() {
                 <input
                     type="checkbox"
                     name="remember"
+                    disabled={submitting}
                     className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                 />
-                <span className="text-xs sm:text-sm text-slate-600">Keep me signed in</span>
+                <span className="text-xs sm:text-sm text-slate-600">
+                    Keep me signed in for 30 days
+                </span>
             </label>
 
-            {/* Liquid glass submit button */}
+            {/* Submit */}
             <button
                 type="submit"
                 disabled={submitting}
@@ -193,7 +247,6 @@ export default function SignInForm() {
           transition-transform active:scale-[0.98]
         "
             >
-                {/* LAYER 1 — liquid distortion */}
                 <span
                     aria-hidden="true"
                     className="absolute inset-0 rounded-full"
@@ -202,14 +255,11 @@ export default function SignInForm() {
                         WebkitBackdropFilter: "blur(14px) saturate(1.4)",
                     }}
                 />
-                {/* LAYER 2 — dark tint (keeps button CTA-dark) */}
                 <span
                     aria-hidden="true"
                     className="absolute inset-0 rounded-full bg-slate-950/90"
                 />
-                {/* LAYER 3 — content + speculars */}
                 <span className="relative flex items-center justify-center gap-2 h-full px-6 text-white text-sm font-semibold">
-                    {/* Top glint */}
                     <span
                         aria-hidden="true"
                         className="pointer-events-none absolute inset-x-6 top-0 h-[1.5px] rounded-full bg-linear-to-r from-transparent via-white/60 to-transparent"

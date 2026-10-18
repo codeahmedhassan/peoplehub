@@ -1,87 +1,52 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import PasswordStrength, { scorePassword } from "./PasswordStrength";
-import {
-    SIGNUP_COMPANY_SIZES,
-    SIGNUP_ROLES,
-} from "@/lib/constants";
+import { SIGNUP_COMPANY_SIZES, SIGNUP_ROLES } from "@/lib/constants";
+import { apiFetch, ApiError } from "@/lib/api";
 
+/* ---------- icons (unchanged) ---------- */
 function UserIcon() {
     return (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-            />
+            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
         </svg>
     );
 }
-
 function MailIcon() {
     return (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-            />
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
         </svg>
     );
 }
-
 function BuildingIcon() {
     return (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-            />
+            <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
         </svg>
     );
 }
-
 function LockIcon() {
     return (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-            />
+            <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
         </svg>
     );
 }
-
 function EyeIcon({ open }: { open: boolean }) {
     return open ? (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-            <path
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-            />
+            <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
         </svg>
     ) : (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-                d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-            />
+            <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
         </svg>
     );
 }
-
 function ArrowRight() {
     return (
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -89,49 +54,111 @@ function ArrowRight() {
         </svg>
     );
 }
-
 function Spinner() {
     return (
         <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
-            <path
-                d="M22 12a10 10 0 0 1-10 10"
-                stroke="currentColor"
-                strokeWidth="4"
-                strokeLinecap="round"
-            />
+            <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+    );
+}
+function AlertIcon() {
+    return (
+        <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
         </svg>
     );
 }
 
 const inputClass =
-    "w-full pl-11 pr-4 py-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/70 ring-1 ring-slate-900/5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60 transition-all";
+    "w-full pl-11 pr-4 py-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/70 ring-1 ring-slate-900/5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60 transition-all disabled:opacity-60";
 
 export default function SignUpForm() {
+    const router = useRouter();
     const [password, setPassword] = useState("");
     const [confirm, setConfirm] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [formError, setFormError] = useState<string | null>(null);
     const passwordsMatch = password.length > 0 && password === confirm;
     const passwordsMismatch = confirm.length > 0 && password !== confirm;
     const canSubmit =
         scorePassword(password) !== "weak" && passwordsMatch && !submitting;
 
+
+    function clearFieldError(field: string) {
+        setFieldErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+    }
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
+        setFormError(null);
+        setFieldErrors({});
         if (!canSubmit) return;
+
+        const form = new FormData(e.currentTarget);
+
+        const terms = form.get("terms") === "on";
+        const privacy = form.get("privacy") === "on";
+        if (!terms || !privacy) {
+            setFormError("Please accept the Terms of Service and Privacy Policy.");
+            return;
+        }
+
+        const email = String(form.get("email") || "").trim().toLowerCase();
+
         setSubmitting(true);
-        // Simulated submission — replace with your real signup call.
-        const payload = Object.fromEntries(new FormData(e.currentTarget).entries());
-        console.log("Signup payload:", payload);
-        await new Promise((res) => setTimeout(res, 900));
-        setSubmitting(false);
+        try {
+            await apiFetch("/auth/signup", {
+                method: "POST",
+                body: {
+                    fullName: String(form.get("fullName") || "").trim(),
+                    email,
+                    password: String(form.get("password") || ""),
+                    company: String(form.get("company") || "").trim(),
+                    companySize: String(form.get("companySize") || ""),
+                    role: String(form.get("role") || ""),
+                    terms,
+                    privacy,
+                },
+            });
+
+            // ✅ Redirect to the verify-email page with the user's email in the query
+            router.push("/verify-email");
+        } catch (err) {
+            if (err instanceof ApiError) {
+                if (err.errors?.length) {
+                    const map: Record<string, string> = {};
+                    for (const fe of err.errors) map[fe.field] = fe.message;
+                    setFieldErrors(map);
+                }
+                setFormError(err.message);
+            } else {
+                setFormError("Something went wrong. Please try again.");
+            }
+            setSubmitting(false);
+        }
     }
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {formError && (
+                <div
+                    role="alert"
+                    className="flex items-start gap-2 rounded-2xl bg-rose-50/90 border border-rose-200 text-rose-700 text-xs sm:text-sm px-4 py-3"
+                >
+                    <AlertIcon />
+                    <span>{formError}</span>
+                </div>
+            )}
+
             {/* Row 1: Full name */}
             <div>
                 <label htmlFor="fullName" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">
@@ -148,9 +175,14 @@ export default function SignUpForm() {
                         required
                         autoComplete="name"
                         placeholder="Jane Cooper"
-                        className={inputClass}
+                        disabled={submitting}
+                        onChange={() => clearFieldError("fullName")}
+                        className={`${inputClass} ${fieldErrors.fullName ? "border-rose-300 ring-rose-100" : ""}`}
                     />
                 </div>
+                {fieldErrors.fullName && (
+                    <p className="mt-2 text-[11px] text-rose-600">{fieldErrors.fullName}</p>
+                )}
             </div>
 
             {/* Row 2: Work email */}
@@ -169,12 +201,17 @@ export default function SignUpForm() {
                         required
                         autoComplete="email"
                         placeholder="jane@company.com"
-                        className={inputClass}
+                        disabled={submitting}
+                        onChange={() => clearFieldError("email")}
+                        className={`${inputClass} ${fieldErrors.email ? "border-rose-300 ring-rose-100" : ""}`}
                     />
                 </div>
+                {fieldErrors.email && (
+                    <p className="mt-2 text-[11px] text-rose-600">{fieldErrors.email}</p>
+                )}
             </div>
 
-            {/* Row 3: Company + role (side by side on sm+) */}
+            {/* Row 3: Company + size */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label htmlFor="company" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">
@@ -191,9 +228,14 @@ export default function SignUpForm() {
                             required
                             autoComplete="organization"
                             placeholder="Acme Inc."
-                            className={inputClass}
+                            disabled={submitting}
+                            onChange={() => clearFieldError("company")}
+                            className={`${inputClass} ${fieldErrors.company ? "border-rose-300 ring-rose-100" : ""}`}
                         />
                     </div>
+                    {fieldErrors.company && (
+                        <p className="mt-2 text-[11px] text-rose-600">{fieldErrors.company}</p>
+                    )}
                 </div>
                 <div>
                     <label htmlFor="companySize" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">
@@ -204,7 +246,9 @@ export default function SignUpForm() {
                         name="companySize"
                         required
                         defaultValue=""
-                        className="w-full px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/70 ring-1 ring-slate-900/5 text-sm text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-size-[16px_16px] bg-position-[right_1rem_center] bg-no-repeat"
+                        disabled={submitting}
+                        onChange={() => clearFieldError("companySize")}
+                        className={`w-full px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/70 ring-1 ring-slate-900/5 text-sm text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-size-[16px_16px] bg-position-[right_1rem_center] bg-no-repeat disabled:opacity-60 ${fieldErrors.companySize ? "border-rose-300 ring-rose-100" : ""}`}
                     >
                         <option value="" disabled>
                             Select a size
@@ -215,6 +259,9 @@ export default function SignUpForm() {
                             </option>
                         ))}
                     </select>
+                    {fieldErrors.companySize && (
+                        <p className="mt-2 text-[11px] text-rose-600">{fieldErrors.companySize}</p>
+                    )}
                 </div>
             </div>
 
@@ -228,7 +275,9 @@ export default function SignUpForm() {
                     name="role"
                     required
                     defaultValue=""
-                    className="w-full px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/70 ring-1 ring-slate-900/5 text-sm text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-size-[16px_16px] bg-position-[right_1rem_center] bg-no-repeat"
+                    disabled={submitting}
+                    onChange={() => clearFieldError("role")}
+                    className={`w-full px-4 py-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white/70 ring-1 ring-slate-900/5 text-sm text-slate-900 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100/60 transition-all appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-size-[16px_16px] bg-position-[right_1rem_center] bg-no-repeat disabled:opacity-60 ${fieldErrors.role ? "border-rose-300 ring-rose-100" : ""}`}
                 >
                     <option value="" disabled>
                         Select your role
@@ -239,6 +288,9 @@ export default function SignUpForm() {
                         </option>
                     ))}
                 </select>
+                {fieldErrors.role && (
+                    <p className="mt-2 text-[11px] text-rose-600">{fieldErrors.role}</p>
+                )}
             </div>
 
             {/* Row 5: Password */}
@@ -258,8 +310,12 @@ export default function SignUpForm() {
                         autoComplete="new-password"
                         placeholder="Create a password"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className={`${inputClass} pr-12`}
+                        disabled={submitting}
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+                            clearFieldError("password");
+                        }}
+                        className={`${inputClass} pr-12 ${fieldErrors.password ? "border-rose-300 ring-rose-100" : ""}`}
                     />
                     <button
                         type="button"
@@ -271,9 +327,12 @@ export default function SignUpForm() {
                     </button>
                 </div>
                 <PasswordStrength value={password} />
+                {fieldErrors.password && (
+                    <p className="mt-2 text-[11px] text-rose-600">{fieldErrors.password}</p>
+                )}
             </div>
 
-            {/* Row 6: Confirm password */}
+            {/* Row 6: Confirm password (client-only) */}
             <div>
                 <label htmlFor="confirm" className="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">
                     Confirm password
@@ -290,9 +349,9 @@ export default function SignUpForm() {
                         autoComplete="new-password"
                         placeholder="Re-enter your password"
                         value={confirm}
+                        disabled={submitting}
                         onChange={(e) => setConfirm(e.target.value)}
-                        className={`${inputClass} pr-12 ${passwordsMismatch ? "border-rose-300 ring-rose-100" : ""
-                            } ${passwordsMatch ? "border-emerald-300 ring-emerald-100" : ""}`}
+                        className={`${inputClass} pr-12 ${passwordsMismatch ? "border-rose-300 ring-rose-100" : ""} ${passwordsMatch ? "border-emerald-300 ring-emerald-100" : ""}`}
                     />
                     <button
                         type="button"
@@ -317,21 +376,25 @@ export default function SignUpForm() {
                     type="checkbox"
                     name="terms"
                     required
+                    disabled={submitting}
                     className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                 />
                 <span className="text-[12px] text-slate-500 leading-relaxed">
                     I agree to the{" "}
                     <a href="#terms" className="font-semibold text-blue-600 hover:underline">
                         Terms of Service
-                    </a>{" "}
+                    </a>
                     .
                 </span>
             </label>
+
+            {/* Privacy (was incorrectly named "terms") */}
             <label className="flex items-start gap-3 cursor-pointer select-none pt-1">
                 <input
                     type="checkbox"
-                    name="terms"
+                    name="privacy"
                     required
+                    disabled={submitting}
                     className="mt-0.5 w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                 />
                 <span className="text-[12px] text-slate-500 leading-relaxed">
@@ -343,16 +406,11 @@ export default function SignUpForm() {
                 </span>
             </label>
 
-            {/* Liquid glass submit button */}
+            {/* Submit */}
             <button
                 type="submit"
                 disabled={!canSubmit}
-                className="
-          relative w-full rounded-full overflow-hidden
-          h-12 mt-2
-          disabled:opacity-60 disabled:cursor-not-allowed
-          transition-transform active:scale-[0.98]
-        "
+                className="relative w-full rounded-full overflow-hidden h-12 mt-2 disabled:opacity-60 disabled:cursor-not-allowed transition-transform active:scale-[0.98]"
             >
                 <span
                     aria-hidden="true"
@@ -362,10 +420,7 @@ export default function SignUpForm() {
                         WebkitBackdropFilter: "blur(14px) saturate(1.4)",
                     }}
                 />
-                <span
-                    aria-hidden="true"
-                    className="absolute inset-0 rounded-full bg-slate-950/90"
-                />
+                <span aria-hidden="true" className="absolute inset-0 rounded-full bg-slate-950/90" />
                 <span className="relative flex items-center justify-center gap-2 h-full px-6 text-white text-sm font-semibold">
                     <span
                         aria-hidden="true"
