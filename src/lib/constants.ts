@@ -3588,3 +3588,34 @@ export const workspaceApi = {
             method: "GET",
         }),
 };
+
+/* ============================================================
+   ACCEPT INVITE PAGE DATA
+   ============================================================ */
+
+export const ACCEPT_INVITE_HIGHLIGHTS = [
+    {
+        title: "You've been invited",
+        description:
+            "Someone on your team added you to their PeopleHub workspace.",
+        icon: "sparkles" as const,
+    },
+    {
+        title: "Secure by default",
+        description:
+            "Your password is hashed with bcrypt — never stored in plain text.",
+        icon: "lock" as const,
+    },
+    {
+        title: "One step to get started",
+        description:
+            "Set a password and you'll be in your workspace in under a minute.",
+        icon: "bolt" as const,
+    },
+] as const;
+
+export const ACCEPT_INVITE_TRUST_ITEMS = [
+    "Password encrypted end-to-end",
+    "You can change it anytime from settings",
+    "Fully GDPR & CCPA compliant",
+] as const;

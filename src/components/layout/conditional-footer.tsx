@@ -12,6 +12,7 @@ const HIDDEN_ROUTES = [
     "/verify-email",
     "/setup-workspace",
     "/reset-password",
+    "/accept-invite",
 ];
 
 export default function ConditionalFooter() {
